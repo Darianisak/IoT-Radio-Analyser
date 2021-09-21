@@ -1,11 +1,13 @@
 import json
 import requests
 import time
+import chime
 from datetime import datetime
 
 
-# https://www.delftstack.com/howto/python/python-get-json-from-url/
-# https://www.programiz.com/python-programming/json
+#   https://www.delftstack.com/howto/python/python-get-json-from-url/
+#   https://www.programiz.com/python-programming/json
+#   https://reposhub.com/python/miscellaneous/MaxHalford-chime.html
 
 #   main performs analysis of The RockFM's web API to determine whether songs
 #   have been heard played on air already for a given time period.
@@ -16,6 +18,9 @@ from datetime import datetime
 #   @param cool_down is how long the program should wait to grab the JSON again
 #       if the song has not changed since the last JSON read.
 def main(url, cycle_count, cool_down):
+
+    print("Beginning analytics platform...")
+
     #   Defines a Dictionary of Artist:Song[] pairings
     Artist_Songs = {}
 
@@ -41,7 +46,7 @@ def main(url, cycle_count, cool_down):
             start_time = convert_time(currentJSON['nowPlaying'][0].get('played_time'))
             song_duration = currentJSON['nowPlaying'][0].get('length_in_secs')
             system_time = convert_time(datetime.now().strftime("%H:%M:%S"))
-            wait_time = (start_time + int(song_duration)) - system_time
+            wait_time = (start_time + int(song_duration) + 10) - system_time
 
             #   Pull the current song name from the JSON
             song_name = currentJSON['nowPlaying'][0].get('name')
@@ -55,29 +60,35 @@ def main(url, cycle_count, cool_down):
             if artist_name not in Artist_Songs:
 
                 #   Create a mapping for this band and add the current song to it.
+                print("New Artist && Song: " + artist_name + ": '" + song_name +
+                      "' Start time was " + currentJSON['nowPlaying'][0].get('played_time')
+                      + " with the next song expected in " + str(wait_time) +
+                        " seconds.")
                 Artist_Songs[artist_name] = [song_name]
 
             elif song_name not in Artist_Songs.get(artist_name):
 
                 #   Add the song to the already existent artist key mapping.
+                print("New Song: " + artist_name + " " + song_name +
+                      " Start time was " + currentJSON['nowPlaying'][0].get('played_time')
+                      + " with the next song expected in " + str(wait_time) +
+                      " seconds.")
                 Artist_Songs[artist_name] = Artist_Songs.get(artist_name).append(song_name)
             else:
 
-                #   The song has already been played during the current runtime.
-                print("Duplicate song found; get that bag.")
+                #   The song has already been played during the current
+                #   so cue audio alerts to notify the user.
+                chime.success()
+                chime.success()
+                chime.success()
+                chime.success()
+                chime.success()
+                print("Duplicate song found! " + artist_name + " " + song_name)
 
             #   Force the system to wait to grab a new JSON until the expected
             #   new song period has been reached.
-            time.sleep(wait_time)
-            #   Decrement the cycle count
-            cycle_count -= cycle_count
-        else:
-
-            #   If the time out period has expired and the song has not changed,
-            #   an ad break could be happening, so wait a period of time before
-            #   grabbing the JSON again.
             try:
-                time.sleep(cool_down)
+                time.sleep(wait_time)
             except ValueError:
                 #   It's highly unlikely, but ValueErrors can be thrown if
                 #   time.sleep is given a negative value. This could occur
@@ -87,8 +98,19 @@ def main(url, cycle_count, cool_down):
                 #   it anyway.
                 print("Network disconnect has occurred; Flood until restablished.")
 
+            #   As a new song entry was added, decrement the cycle_count value.
+            cycle_count = cycle_count - 1
+        else:
+
+            #   If the time out period has expired and the song has not changed,
+            #   an ad break could be happening, so wait a period of time before
+            #   trying to grab the JSON again.
+            print("Expected time fell short, waiting a further " + str(cool_down) + " seconds")
+            time.sleep(cool_down)
+
         if cycle_count == 0:
-            #   The program has reached the allotted amount of cycles, so return and exit.
+            #   The program has reached the allotted amount of cycles, so return
+            #   and exit.
             return Artist_Songs
 
 
@@ -114,8 +136,10 @@ def convert_time(full_time):
 try:
     #   Calls the main method with args.
     print(str(main("https://radio-api.mediaworks.nz/radio-api/v3/station/therock/hawkesbay/web", 10, 80)))
+    chime.success()
     exit(0)
 except KeyboardInterrupt:
     #   Handles runtime cancellation gracefully.
     print("Script was exited via KeyboardInterrupt.")
+    chime.success()
     exit(1)
