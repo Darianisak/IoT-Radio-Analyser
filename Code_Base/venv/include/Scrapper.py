@@ -132,16 +132,52 @@ def convert_time(full_time):
     return total_time
 
 
+#   get_name_from_code is used to simplify the code base when determining api
+#   urls based on user input.
+#
+#   @param station_code is a number from 1 to 8 inclusive, which represents
+#       a given MediaWorks radio station name, as defined by the api.
+#   @return the station_name of a MediaWorks radio station.
+def get_name_from_code(station_code):
+    if station_code == 1:
+        return "therock"
+    elif station_code == 2:
+        return "maifm"
+    elif station_code == 3:
+        return "theedge"
+    elif station_code == 4:
+        return "georgefm"
+    elif station_code == 5:
+        return "morefm"
+    elif station_code == 6:
+        return "thebreeze"
+    elif station_code == 7:
+        return "thesound"
+    elif station_code == 8:
+        return "magic"
+    else:
+        #   This branch should never be reached, as it means that the while
+        #   verification loop has somehow been bypassed.
+        raise RuntimeError("Invalid station code provided with verification step"
+                           " ignored.")
+
+
 #   Post intro message to user
 print("Welcome to the MediaWorks radio programming analyser!\nThis script records"
       " each artist and song pairing for a given amount of songs by pulling\n"
       "publicly available JSON files from the specified stations web player.\n")
 
 #   List out station options
-print("This application supports all of MediaWorks programming.\nOptions include"
-      ", and should be inputted as so: therock, maifm, theedge, georgefm, morefm,"
-      "\nthebreeze, thesound, and magic.")
-station_name = input("Enter one of the above station names as displayed: ")
+print("This application supports all of MediaWorks programming.\nOptions "
+      "are listed as follows with numbers representing each:"
+      "\n1::The Rock, 2::MaiFM, 3::The Edge, 4::GeorgeFM, 5::MoreFM, 6::The Breeze, 7::The Sound, and 8::Magic.")
+station_code = int(input("Enter one of the above station names as displayed: "))
+
+while station_code not in [1,2,3,4,5,6,7,8]:
+    station_code = int(input("Sorry, but the provided station code was invalid. Please resubmit: "))
+
+#   Grab the station name from the user supplied station code.
+station_name = get_name_from_code(station_code)
 
 #   Allowing the user to interactively decide the region makes it more complicated
 #   than it really should be. If a user wishes to change the region, simply
