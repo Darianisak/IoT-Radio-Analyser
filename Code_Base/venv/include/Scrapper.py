@@ -28,7 +28,7 @@ def main(url, cycle_count, cool_down):
     prev_song = ""
 
     #   Run the primary loop until the cycleCount is exceeded.
-    while True:
+    while cycle_count > 0:
 
         #   Pull JSON file from webAPI and convert it to usable data.
         primitive = requests.get(url)
@@ -108,10 +108,9 @@ def main(url, cycle_count, cool_down):
             print("Expected time fell short, waiting a further " + str(cool_down) + " seconds")
             time.sleep(cool_down)
 
-        if cycle_count == 0:
-            #   The program has reached the allotted amount of cycles, so return
-            #   and exit.
-            return Artist_Songs
+    #   The program has reached the allotted amount of cycles, so return
+    #   and exit.
+    return Artist_Songs
 
 
 #   convertToSeconds is used to covert the 24 hour time format found in the
@@ -133,9 +132,29 @@ def convert_time(full_time):
     return total_time
 
 
+#   Post intro message to user
+print("Welcome to the MediaWorks radio programming analyser!\nThis script records"
+      " each artist and song pairing for a given amount of songs by pulling\n"
+      "publicly available JSON files from the specified stations web player.\n")
+
+#   List out station options
+print("This application supports all of MediaWorks programming.\nOptions include"
+      ", and should be inputted as so: therock, maifm, theedge, georgefm, morefm,"
+      "\nthebreeze, thesound, and magic.")
+station_name = input("Enter one of the above station names as displayed: ")
+
+#   Allowing the user to interactively decide the region makes it more complicated
+#   than it really should be. If a user wishes to change the region, simply
+#   change the region_name below: be advised that it must match a region defined
+#   by the MediaWorks web player system.
+region_name = "hawkesbay"
+
+api_url = "https://radio-api.mediaworks.nz/radio-api/v3/station/" \
+          + str(station_name) + "/" + str(region_name) + "/web"
+
 try:
     #   Calls the main method with args.
-    print(str(main("https://radio-api.mediaworks.nz/radio-api/v3/station/therock/hawkesbay/web", 10, 80)))
+    print(str(main(api_url, 10, 80)))
     chime.success()
     exit(0)
 except KeyboardInterrupt:
