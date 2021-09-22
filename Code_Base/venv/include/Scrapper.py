@@ -9,7 +9,7 @@ from datetime import datetime
 #   https://www.programiz.com/python-programming/json
 #   https://reposhub.com/python/miscellaneous/MaxHalford-chime.html
 
-#   main performs analysis of The RockFM's web API to determine whether songs
+#   main performs analysis of MediaWorks web API to determine whether songs
 #   have been heard played on air already for a given time period.
 #
 #   @param url is the URL to pull a JSON file from
