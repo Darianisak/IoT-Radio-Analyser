@@ -22,6 +22,7 @@ def main(url, cycle_count, cool_down):
     print("Beginning analytics platform...")
 
     #   Defines a Dictionary of Artist:Song[] pairings
+    global Artist_Songs
     Artist_Songs = {}
 
     #   Defines a quick look up variable for the most recent song
@@ -90,13 +91,13 @@ def main(url, cycle_count, cool_down):
             try:
                 time.sleep(wait_time)
             except ValueError:
-                #   It's highly unlikely, but ValueErrors can be thrown if
-                #   time.sleep is given a negative value. This could occur
-                #   if lag and timing problems cause an old JSON to be delivered
-                #   after the system time has already exceeded the estimated
-                #   time. This is very unlikely, but it doesn't hurt to handle
-                #   it anyway.
-                print("Network disconnect has occurred; Flood until restablished.")
+                #   ValueErrors are thrown in cases where the current system time
+                #   exceeds the estimate time of song completion. This can be caused
+                #   by a few factors, however, two main reasons are extended add breaks,
+                #   and network disconnects.
+                print("Extended break or disconnect occurred; "
+                      "follow standard wait protocol.")
+                time.sleep(cool_down)
 
             #   As a new song entry was added, decrement the cycle_count value.
             cycle_count = cycle_count - 1
@@ -162,18 +163,19 @@ def get_name_from_code(station_code):
                            " ignored.")
 
 
-#   Post intro message to user
+#   Post intro message to user.
 print("Welcome to the MediaWorks radio programming analyser!\nThis script records"
       " each artist and song pairing for a given amount of songs by pulling\n"
       "publicly available JSON files from the specified stations web player.\n")
 
-#   List out station options
+#   List out station options.
 print("This application supports all of MediaWorks programming.\nOptions "
       "are listed as follows with numbers representing each:"
       "\n1::The Rock, 2::MaiFM, 3::The Edge, 4::GeorgeFM, 5::MoreFM, 6::The Breeze, 7::The Sound, and 8::Magic.")
 station_code = int(input("Enter one of the above station names as displayed: "))
 
-while station_code not in [1,2,3,4,5,6,7,8]:
+#   Verify that the provided station code is valid.
+while station_code not in [1, 2, 3, 4, 5, 6, 7, 8]:
     station_code = int(input("Sorry, but the provided station code was invalid. Please resubmit: "))
 
 #   Grab the station name from the user supplied station code.
@@ -182,12 +184,22 @@ station_name = get_name_from_code(station_code)
 #   Allowing the user to interactively decide the region makes it more complicated
 #   than it really should be. If a user wishes to change the region, simply
 #   change the region_name below: be advised that it must match a region defined
-#   by the MediaWorks web player system.
+#   by the MediaWorks web player system. So far as I can tell, changing regions
+#   would only effect the adds played, which isn't something that this script
+#   cares about.
 region_name = "hawkesbay"
 
+#   Takes the user input and generates an api link accordingly.
 api_url = "https://radio-api.mediaworks.nz/radio-api/v3/station/" \
           + str(station_name) + "/" + str(region_name) + "/web"
 
+#   Artist_Songs is defined in a global context not for cases where the program
+#   terminates properly, but when a Keyboard interrupt occurs, for example.
+global Artist_Songs;
+
+#   Try:Except boiler plate code used to handle cases where operation is paused
+#   during runtime. This isn't handled prior to this point because there is no
+#   meaningful information present.
 try:
     #   Calls the main method with args.
     print(str(main(api_url, 10, 80)))
@@ -195,6 +207,8 @@ try:
     exit(0)
 except KeyboardInterrupt:
     #   Handles runtime cancellation gracefully.
-    print("Script was exited via KeyboardInterrupt.")
+    print("Script was exited via KeyboardInterrupt. "
+          "Printing most recent recording status...")
+    print(str(Artist_Songs))
     chime.success()
     exit(1)
